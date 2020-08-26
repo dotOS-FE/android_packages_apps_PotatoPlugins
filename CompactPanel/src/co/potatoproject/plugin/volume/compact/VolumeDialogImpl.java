@@ -17,6 +17,8 @@
 
 package co.potatoproject.plugin.volume.compact;
 
+import android.database.ContentObserver;
+import android.os.UserHandle;
 import static android.app.ActivityManager.LOCK_TASK_MODE_NONE;
 import static android.media.AudioManager.RINGER_MODE_NORMAL;
 import static android.media.AudioManager.RINGER_MODE_SILENT;
@@ -187,6 +189,13 @@ public class VolumeDialogImpl implements VolumeDialog {
     private View mODICaptionsTooltipView = null;
 
     private boolean mLeftVolumeRocker;
+    private SettingsObserver settingsObserver;
+    private boolean isMediaShowing = true;
+    private boolean isRingerShowing = false;
+    private boolean isNotificationShowing = false;
+    private boolean isAlarmShowing = false;
+    private boolean isVoiceShowing = false;
+    private boolean isBTSCOShowing = false;
     private PanelMode mPanelMode = PanelMode.MINI;
 
     public VolumeDialogImpl() {}
@@ -205,6 +214,8 @@ public class VolumeDialogImpl implements VolumeDialog {
         mHasSeenODICaptionsTooltip =
                 Prefs.getBoolean(sysuiContext, Prefs.Key.HAS_SEEN_ODI_CAPTIONS_TOOLTIP, false);
         mLeftVolumeRocker = mSysUIContext.getResources().getBoolean(mSysUIR.bool("config_audioPanelOnLeftSide"));
+        settingsObserver = new SettingsObserver(mHandler);
+        settingsObserver.observe();
     }
 
     @Override
@@ -222,6 +233,7 @@ public class VolumeDialogImpl implements VolumeDialog {
     public void destroy() {
         mController.removeCallback(mControllerCallbackH);
         mHandler.removeCallbacksAndMessages(null);
+        settingsObserver.unobserve();
     }
 
     private void initDialog() {
@@ -280,6 +292,7 @@ public class VolumeDialogImpl implements VolumeDialog {
         if (mRinger != null) {
             mRingerIcon = mRinger.findViewById(R.id.ringer_icon);
             mZenIcon = mRinger.findViewById(R.id.dnd_icon);
+            mRinger.setVisibility(isRingerShowing ? View.VISIBLE : View.GONE);
         }
 
         mButtonsGroup = mDialog.findViewById(R.id.buttons_group);
@@ -363,6 +376,38 @@ public class VolumeDialogImpl implements VolumeDialog {
         initRingerH();
         initSettingsH();
         initODICaptionsH();
+    }
+
+    private class SettingsObserver extends ContentObserver {
+        SettingsObserver(Handler handler) {
+            super(handler);
+        }
+
+        void unobserve() {
+            mContext.getContentResolver().unregisterContentObserver(this);
+        }
+
+        void observe() {
+            mContext.getContentResolver().registerContentObserver(Settings.System.getUriFor(Settings.System.AUDIO_PANEL_VIEW_VOICE), false, this, UserHandle.USER_ALL);
+            mContext.getContentResolver().registerContentObserver(Settings.System.getUriFor(Settings.System.AUDIO_PANEL_VIEW_BT_SCO), false, this, UserHandle.USER_ALL);
+            mContext.getContentResolver().registerContentObserver(Settings.System.getUriFor(Settings.System.AUDIO_PANEL_VIEW_RINGER), false, this, UserHandle.USER_ALL);
+            //mContext.getContentResolver().registerContentObserver(Settings.System.getUriFor(Settings.System.AUDIO_PANEL_VIEW_POSITION), false, this, UserHandle.USER_ALL);
+            update();
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            update();
+            initDialog();
+        }
+
+        public void update() {
+             isVoiceShowing = Settings.System.getIntForUser(mContext.getContentResolver(), Settings.System.AUDIO_PANEL_VIEW_VOICE, 0, UserHandle.USER_CURRENT) == 1;
+             isBTSCOShowing = Settings.System.getIntForUser(mContext.getContentResolver(), Settings.System.AUDIO_PANEL_VIEW_BT_SCO, 0, UserHandle.USER_CURRENT) == 1;
+             isRingerShowing = Settings.System.getIntForUser(mContext.getContentResolver(), Settings.System.AUDIO_PANEL_VIEW_RINGER, 1, UserHandle.USER_CURRENT) == 1;
+             //updateRowsH(getActiveRow());
+
+        }
     }
 
     private final OnComputeInternalInsetsListener mInsetsListener = internalInsetsInfo -> {
@@ -1018,6 +1063,12 @@ public class VolumeDialogImpl implements VolumeDialog {
     }
 
     private boolean shouldBeVisibleH(VolumeRow row, VolumeRow activeRow) {
+        if(row.stream == AudioManager.STREAM_VOICE_CALL && isVoiceShowing){
+            return true;
+        }
+        if(row.stream == AudioManager.STREAM_BLUETOOTH_SCO && isBTSCOShowing){
+            return true;
+        }
         boolean isActive = row.stream == activeRow.stream;
 
         if (isActive) {
