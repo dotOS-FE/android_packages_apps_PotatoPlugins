@@ -13,7 +13,10 @@
 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
        android:shape="rectangle">
-    <solid android:color="@color/accent_tint_color_selector" />
+      <gradient
+       android:startColor="@*android:color/gradient_start"
+       android:endColor="@*android:color/gradient_end"
+       android:angle="45"/>
     <corners
         android:bottomLeftRadius="40dp"
         android:topLeftRadius="40dp"
