@@ -438,7 +438,7 @@ public class VolumeDialogImpl implements VolumeDialog {
     private void cleanExpandedRows() {
         for (int i = mRows.size() - 1; i >= 0; i--) {
             final VolumeRow row = mRows.get(i);
-            if (row.stream == AudioManager.STREAM_RING) {
+            if (row.stream == AudioManager.STREAM_RING || row.stream == AudioManager.STREAM_ALARM) {
                 removeRow(row);
             }
         }
@@ -586,6 +586,8 @@ public class VolumeDialogImpl implements VolumeDialog {
                 if (!mExpanded) {
                     addRow(AudioManager.STREAM_RING, mSysUIR.drawable("ic_volume_ringer"),
                             mSysUIR.drawable("ic_volume_ringer_mute"), true, false);
+					addRow(AudioManager.STREAM_ALARM, mSysUIR.drawable("ic_volume_alarm"),
+                            mSysUIR.drawable("ic_alarm"), true, false);
                     updateAllActiveRows();
                     mExpanded = true;
                     updateOutputSwitcherVisibility();
