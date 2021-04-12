@@ -67,6 +67,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
+import android.os.UserHandle;
 import android.os.VibrationEffect;
 import android.provider.Settings;
 import android.provider.Settings.Global;
@@ -988,6 +989,11 @@ public class VolumeDialogImpl implements VolumeDialog {
         }
     }
 
+    private boolean isVolumePanelTintEnabled() {
+        return Settings.System.getIntForUser(mContext.getContentResolver(),
+                Settings.System.VOLUME_PANEL_TINT, 0, UserHandle.USER_CURRENT) == 1;
+    }
+
     protected void updateRingerH() {
         if (mState != null) {
             final StreamState ss = mState.states.get(AudioManager.STREAM_RING);
@@ -998,8 +1004,7 @@ public class VolumeDialogImpl implements VolumeDialog {
             ColorStateList ringerbackgroundnormal = mContext.getResources().getColorStateList(R.color.ringer_bcg_normal);
             int RingerMuteT = mContext.getResources().getColor(R.color.ringer_icon_mute);
             int RingerNormalT = mContext.getResources().getColor(R.color.ringer_icon_normal);
-            mEnableVolumePanelTint = mSysUIContext.getResources().getBoolean(mSysUIR.bool("config_enableVolumePanelTint"));
-
+            mEnableVolumePanelTint = isVolumePanelTintEnabled();
 
             boolean isZenMuted = mState.zenMode == Global.ZEN_MODE_ALARMS
                     || mState.zenMode == Global.ZEN_MODE_NO_INTERRUPTIONS
@@ -1294,7 +1299,7 @@ public class VolumeDialogImpl implements VolumeDialog {
         final int alpha = useActiveColoring
                 ? Color.alpha(tint.getDefaultColor())
                 : getAlphaAttr(android.R.attr.secondaryContentAlpha);
-        mEnableVolumePanelTint = mSysUIContext.getResources().getBoolean(mSysUIR.bool("config_enableVolumePanelTint"));
+        mEnableVolumePanelTint = isVolumePanelTintEnabled();
         final ColorStateList progressTint = useActiveColoring ? null : tint;
         row.slider.setProgressTintList(mEnableVolumePanelTint ? tint : progressTint);
     }
