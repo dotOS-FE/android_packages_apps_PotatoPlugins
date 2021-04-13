@@ -34,7 +34,7 @@
                         <corners android:radius="20dp"/>
                         <size android:height="@dimen/custom_volume_dialog_miui_seekbar_width" />
                         <gradient
-                           android:startColor="@*android:color/bootleg_accent_gradient_end_color"
+                           android:startColor="#00000000"
                            android:endColor="@*android:color/accent_device_default"
                            android:angle="0"/>
                     </shape>
