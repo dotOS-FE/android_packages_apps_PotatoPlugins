@@ -51,7 +51,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
-import android.os.UserHandle;
 import android.os.VibrationEffect;
 import android.provider.Settings;
 import android.provider.Settings.Global;
@@ -1041,15 +1040,10 @@ public class VolumeDialogImpl implements VolumeDialog {
         }
         final ColorStateList tint = isActive && row.slider.isEnabled() ? mActiveSliderTint
                 : mInactiveSliderTint;
-        boolean mEnableVolumePanelTint = isVolumePanelTintEnabled();
+        boolean mEnableVolumePanelTint = mSysUIContext.getResources().getBoolean(mSysUIR.bool("config_enableVolumePanelTint"));
         final ColorStateList progressTint = isActive && row.slider.isEnabled() ? null : tint;
         row.slider.setProgressTintList(mEnableVolumePanelTint ? tint : progressTint);
         row.slider.setThumbTintList(tint);
-    }
-
-    private boolean isVolumePanelTintEnabled() {
-        return Settings.System.getIntForUser(mContext.getContentResolver(),
-                Settings.System.VOLUME_PANEL_TINT, 0, UserHandle.USER_CURRENT) == 1;
     }
 
     private void updateVolumeRowSliderH(VolumeRow row, boolean enable, int vlevel, boolean maxChanged) {
